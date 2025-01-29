@@ -1,50 +1,38 @@
-// netlify/functions/uploadCard.js
-
-const fs = require("fs");
-const path = require("path");
-
-// This function will be triggered by the frontend request
-exports.handler = async function (event, context) {
+exports.handler = async (event, context) => {
+  // Check if it's a POST request
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405, // Method Not Allowed
-      body: JSON.stringify({ message: "Only POST requests are allowed." }),
+      body: JSON.stringify({ message: "Only POST requests are allowed" }),
     };
   }
 
-  // Parse the JSON body
-  const { name, description } = JSON.parse(event.body);
-
-  if (!name || !description) {
+  // Parse the incoming form data (assuming it's JSON)
+  let body;
+  try {
+    body = JSON.parse(event.body); // Assuming JSON format for form data
+  } catch (err) {
     return {
       statusCode: 400, // Bad Request
-      body: JSON.stringify({ message: "Name and description are required." }),
+      body: JSON.stringify({ message: "Invalid JSON data" }),
     };
   }
 
-  // Example of saving data to a file (you can replace this with a database in production)
-  const filePath = path.join(__dirname, "cards.json");
+  // Log the data received from the form (you can process or save it here)
+  console.log("Form Data:", body);
 
-  try {
-    const existingData = fs.existsSync(filePath)
-      ? JSON.parse(fs.readFileSync(filePath))
-      : [];
-    existingData.push({
-      name,
-      description,
-      timestamp: new Date().toISOString(),
-    });
-
-    fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2));
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: "Card uploaded successfully!" }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500, // Internal Server Error
-      body: JSON.stringify({ message: "Failed to save card data." }),
-    };
-  }
+  // Respond back with success
+  return {
+    statusCode: 200, // OK
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*", // Allow requests from any domain
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+    body: JSON.stringify({
+      message: "Data received successfully!",
+      data: body, // Optionally return the data that was sent
+    }),
+  };
 };
