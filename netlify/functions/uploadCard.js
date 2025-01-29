@@ -6,7 +6,7 @@ if (!admin.apps.length) {
     credential: admin.credential.cert(
       require("./firebase-service-account.json")
     ), // 🔹 Replace with your service account file
-    databaseURL: "https://your-project-id.firebaseio.com", // 🔹 Replace with your actual Firebase Database URL
+    databaseURL: "https://khalidapi-ac2fb-default-rtdb.firebaseio.com", // 🔹 Replace with your actual Firebase Database URL
   });
 }
 
