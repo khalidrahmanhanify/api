@@ -1,53 +1,62 @@
 const admin = require("firebase-admin");
 
-// Initialize Firebase Admin with service account credentials
+// Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(
       require("./firebase-service-account.json")
-    ), // Path to the service account JSON file
+    ), // 🔹 Replace with your service account file
+    databaseURL: "https://your-project-id.firebaseio.com", // 🔹 Replace with your actual Firebase Database URL
   });
 }
-const db = admin.firestore(); // Reference to Firestore database
+
+const db = admin.database(); // ✅ Reference to Realtime Database
 
 exports.handler = async (event) => {
+  console.log("Incoming request:", event);
+
+  // Only allow POST requests
   if (event.httpMethod !== "POST") {
     return {
-      statusCode: 405, // Method Not Allowed
+      statusCode: 405,
       body: JSON.stringify({ message: "Only POST requests are allowed" }),
     };
   }
 
   let body;
   try {
-    body = JSON.parse(event.body); // Parse incoming request body
+    body = JSON.parse(event.body); // Parse JSON body
+    console.log("Parsed body:", body);
   } catch (err) {
+    console.error("Invalid JSON:", err);
     return {
       statusCode: 400,
       body: JSON.stringify({ message: "Invalid JSON data" }),
     };
   }
 
-  // Store card data in Firestore
   try {
-    const cardRef = db.collection("cards").doc(); // Create a new document in 'cards' collection
-    await cardRef.set({
+    const ref = db.ref("cards").push(); // 🔹 Push a new entry into 'cards'
+    await ref.set({
       name: body.name,
       description: body.description,
-      date: new Date(),
+      date: new Date().toISOString(),
     });
+
+    console.log("Data successfully written to Realtime Database!");
 
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*", // Allow CORS
+        "Access-Control-Allow-Origin": "*", // Enable CORS
       },
       body: JSON.stringify({ message: "Card uploaded successfully!" }),
     };
   } catch (err) {
+    console.error("Database write failed:", err);
     return {
-      statusCode: 500, // Internal Server Error
+      statusCode: 500,
       body: JSON.stringify({
         message: "Failed to upload card",
         error: err.message,
